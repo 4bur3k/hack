@@ -71,6 +71,31 @@ elif mode == 'Ofline' and file!= None:
     with open('tmp.mp4', 'wb') as f:
         f.write(bytes_data)
 
-    vid = model.track('tmp.mp4', conf=0.3, iou=0.5)
+    video_path = "tmp.mp4"
+    cap = cv2.VideoCapture(video_path)
 
-    st.video(vid)
+    viewer = st.image(get_random_numpy())
+
+    while cap.isOpened():
+        # Read a frame from the video
+        success, frame = cap.read()
+
+        if success:
+            frame = cv2.cvtColor(cv2.resize(frame, (w,h)), cv2.COLOR_BGR2RGB)
+            # Run YOLOv8 tracking on the frame, persisting tracks between frames
+            results = model.track(frame, persist=True)
+
+            # Visualize the results on the frame
+            annotated_frame = results[0].plot()
+            viewer.image(annotated_frame)
+
+            # Break the loop if 'q' is pressed
+            if cv2.waitKey(1) & 0xFF == ord("q"):
+                break
+        else:
+            # Break the loop if the end of the video is reached
+            break
+
+    # Release the video capture object and close the display window
+    cap.release()
+    cv2.destroyAllWindows()
